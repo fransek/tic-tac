@@ -1,6 +1,22 @@
 'use server'
 
-import { Board, Player, Tile, getWinner, winningCombos } from '~/utils'
+import {
+  Board,
+  Player,
+  Tile,
+  getEmptyBoard,
+  getWinner,
+  winningCombos,
+} from '~/utils'
+
+const AI_THRESHOLD = 1
+const PLAYER_THRESHOLD = 50
+const CORNER_BASE_SCORE = 1
+const EDGE_BASE_SCORE = 0
+const CENTER_BASE_SCORE = 2
+const WIN_SCORE = 100
+const AI_TWO_IN_A_ROW_SCORE = 25
+const PLAYER_TWO_IN_A_ROW_SCORE = -50
 
 export const getAIMove = async (board: Board): Promise<Board> => {
   const bestMoveIndex = getBestMove(board)
@@ -26,7 +42,11 @@ const getBestMove = (board: Board): number => {
     player: Player,
     moves: number[] = []
   ) => {
-    const topMoves = getTopCandidates(currentBoard, player)
+    const topMoves = getTopCandidates(
+      currentBoard,
+      player,
+      player === 'O' ? AI_THRESHOLD : PLAYER_THRESHOLD
+    )
     for (const { index } of topMoves) {
       const newBoard = [...currentBoard]
       newBoard[index] = player
@@ -54,7 +74,17 @@ const getBestMove = (board: Board): number => {
 const getHeuristicBoardScore = (board: Board, player: Player) => {
   const opponent = player === 'X' ? 'O' : 'X'
   let score = 0
-  const baseScores = [1, 0, 1, 0, 2, 0, 1, 0, 1]
+  const baseScores = [
+    CORNER_BASE_SCORE,
+    EDGE_BASE_SCORE,
+    CORNER_BASE_SCORE,
+    EDGE_BASE_SCORE,
+    CENTER_BASE_SCORE,
+    EDGE_BASE_SCORE,
+    CORNER_BASE_SCORE,
+    EDGE_BASE_SCORE,
+    CORNER_BASE_SCORE,
+  ]
 
   board.forEach((tile, index) => {
     if (tile === player) {
@@ -65,21 +95,21 @@ const getHeuristicBoardScore = (board: Board, player: Player) => {
   })
 
   for (const combo of winningCombos) {
-    const playerCount = getCount(combo, board, opponent)
-    const opponentCount = getCount(combo, board, player)
+    const opponentCount = getCount(combo, board, opponent)
+    const playerCount = getCount(combo, board, player)
     const emptyCount = getCount(combo, board, null)
-    if (opponentCount === 3) {
-      score += 100
-    } else if (opponentCount === 2 && emptyCount === 1) {
-      score += 25
+    if (playerCount === 3) {
+      score += WIN_SCORE
     } else if (playerCount === 2 && emptyCount === 1) {
-      score -= 50
+      score += AI_TWO_IN_A_ROW_SCORE
+    } else if (opponentCount === 2 && emptyCount === 1) {
+      score += PLAYER_TWO_IN_A_ROW_SCORE
     }
   }
   return score
 }
 
-const getTopCandidates = (board: Board, player: Player) => {
+const getTopCandidates = (board: Board, player: Player, threshold: number) => {
   let highestScore = -Infinity
   const possibleMoves = getEmptyIndices(board)
 
@@ -94,7 +124,7 @@ const getTopCandidates = (board: Board, player: Player) => {
   })
 
   return moveScores
-    .filter(({ score }) => score >= highestScore)
+    .filter(({ score }) => score >= highestScore - threshold)
     .toSorted((a, b) => b.score - a.score)
 }
 
@@ -110,4 +140,53 @@ const randomizeArray = (array: any[]) => {
     ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
   }
   return newArray
+}
+
+export const simulateGames = (n: number) => {
+  let xWins = 0
+  let oWins = 0
+  let draws = 0
+  for (let i = 0; i < n; i++) {
+    const winner = simulateGame()
+    if (winner === 'X') {
+      xWins++
+    } else if (winner === 'O') {
+      oWins++
+    } else {
+      draws++
+    }
+  }
+  const total = xWins + oWins + draws
+  console.log(
+    `X: ${xWins} (${(xWins / total) * 100}%), O: ${oWins} (${
+      (oWins / total) * 100
+    }%), Draws: ${draws} (${(draws / total) * 100}%)`
+  )
+}
+
+const simulateGame = () => {
+  let board = getEmptyBoard()
+  let player: Player = 'X'
+  let winner = null
+  let replay: Board[] = []
+
+  while (!winner) {
+    const index = player === 'X' ? getRandomMove(board) : getBestMove(board)
+    board[index] = player
+    winner = getWinner(board)
+    player = player === 'X' ? 'O' : 'X'
+    replay.push([...board])
+    if (winner) {
+      if (winner === 'X') {
+        console.log(replay)
+      }
+      replay = []
+    }
+  }
+  return winner
+}
+
+const getRandomMove = (board: Board): number => {
+  const emptyIndices = getEmptyIndices(board)
+  return emptyIndices[Math.floor(Math.random() * emptyIndices.length)]
 }

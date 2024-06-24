@@ -1,5 +1,5 @@
 import { For, Show, createSignal } from 'solid-js'
-import { getAIMove } from '~/actions/move'
+import { getAIMove, simulateGames } from '~/actions/move'
 import { Board, Tile, Winner, cn, getEmptyBoard, getWinner } from '~/utils'
 
 export default function Home() {
@@ -74,6 +74,7 @@ export default function Home() {
           </button>
         </div>
       </Show>
+      <button onClick={() => simulateGames(100000)}>Simulate Games</button>
     </main>
   )
 }
