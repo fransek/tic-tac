@@ -1,11 +1,11 @@
 import { For, Show, createSignal } from 'solid-js'
 import { getAIMove } from '~/actions/move'
-import { Board, Tile, getEmptyBoard, getWinner } from '~/utils'
+import { Board, Tile, Winner, cn, getEmptyBoard, getWinner } from '~/utils'
 
 export default function Home() {
   const [board, setBoard] = createSignal<Board>(getEmptyBoard())
   const [isPlayersTurn, setIsPlayersTurn] = createSignal(true)
-  const [winner, setWinner] = createSignal<Tile | 'draw'>(null)
+  const [winner, setWinner] = createSignal<Winner>(null)
 
   const makeMove = async (tile: Tile, index: number) => {
     if (tile === null && isPlayersTurn()) {
@@ -43,6 +43,27 @@ export default function Home() {
 
   return (
     <main class='flex items-center pt-10 flex-col gap-3'>
+      <div class='grid grid-cols-3 gap-1 w-fit'>
+        <For each={board()}>
+          {(tile, index) => (
+            <div
+              class={cn(
+                'bg-gray-200 w-12 h-12 flex justify-center items-center text-3xl font-bold',
+                tile === null && isPlayersTurn()
+                  ? 'cursor-pointer'
+                  : 'cursor-default',
+                {
+                  'text-red-600': tile === 'X',
+                  'text-blue-600': tile === 'O',
+                }
+              )}
+              onClick={() => makeMove(tile, index())}
+            >
+              {tile}
+            </div>
+          )}
+        </For>
+      </div>
       <Show when={winner()}>
         <div class='flex flex-col gap-1'>
           <p class='text-lg font-bold'>
@@ -53,22 +74,6 @@ export default function Home() {
           </button>
         </div>
       </Show>
-      <div class='grid grid-cols-3 gap-1 w-fit'>
-        <For each={board()}>
-          {(tile, index) => (
-            <div
-              class={`bg-gray-200 w-12 h-12 flex justify-center items-center text-3xl font-bold ${
-                tile === null && isPlayersTurn()
-                  ? 'cursor-pointer'
-                  : 'cursor-default'
-              }`}
-              onClick={() => makeMove(tile, index())}
-            >
-              {tile}
-            </div>
-          )}
-        </For>
-      </div>
     </main>
   )
 }
