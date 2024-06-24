@@ -10,7 +10,7 @@ import {
 } from '~/utils'
 
 const AI_THRESHOLD = 1
-const PLAYER_THRESHOLD = 50
+const PLAYER_THRESHOLD = 25
 const CORNER_BASE_SCORE = 1
 const EDGE_BASE_SCORE = 0
 const CENTER_BASE_SCORE = 2
@@ -168,20 +168,12 @@ const simulateGame = () => {
   let board = getEmptyBoard()
   let player: Player = 'X'
   let winner = null
-  let replay: Board[] = []
 
   while (!winner) {
     const index = player === 'X' ? getRandomMove(board) : getBestMove(board)
     board[index] = player
     winner = getWinner(board)
     player = player === 'X' ? 'O' : 'X'
-    replay.push([...board])
-    if (winner) {
-      if (winner === 'X') {
-        console.log(replay)
-      }
-      replay = []
-    }
   }
   return winner
 }

@@ -74,7 +74,7 @@ export default function Home() {
           </button>
         </div>
       </Show>
-      <button onClick={() => simulateGames(100000)}>Simulate Games</button>
+      <button onClick={() => simulateGames(1000)}>Simulate Games</button>
     </main>
   )
 }
