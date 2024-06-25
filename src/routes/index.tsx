@@ -1,5 +1,5 @@
 import { For, Show, createSignal } from 'solid-js'
-import { getAIMove, simulateGames } from '~/actions/move'
+import { getAIMove } from '~/actions/ai'
 import { Board, Tile, Winner, cn, getEmptyBoard, getWinner } from '~/utils'
 
 export default function Home() {
@@ -42,13 +42,13 @@ export default function Home() {
   }
 
   return (
-    <main class='flex items-center pt-10 flex-col gap-3'>
-      <div class='grid grid-cols-3 gap-1 w-fit'>
+    <main class='flex items-center flex-col gap-4 pt-40'>
+      <div class='grid grid-cols-3 gap-2 w-fit'>
         <For each={board()}>
           {(tile, index) => (
             <div
               class={cn(
-                'bg-gray-200 w-12 h-12 flex justify-center items-center text-3xl font-bold',
+                'bg-gray-200 w-20 h-20 flex justify-center items-center text-5xl font-bold rounded',
                 tile === null && isPlayersTurn()
                   ? 'cursor-pointer'
                   : 'cursor-default',
@@ -65,16 +65,16 @@ export default function Home() {
         </For>
       </div>
       <Show when={winner()}>
-        <div class='flex flex-col gap-1'>
-          <p class='text-lg font-bold'>
-            {winner() === 'draw' ? 'Draw!' : `Winner: ${winner()}`}
-          </p>
-          <button onClick={restart} class='rounded bg-blue-600 text-white'>
-            Restart
-          </button>
-        </div>
+        <p class='text-2xl font-bold'>
+          {winner() === 'draw' ? 'Draw!' : `${winner()} wins!`}
+        </p>
+        <button
+          onClick={restart}
+          class='text-xl rounded-lg bg-blue-600 py-2 px-4'
+        >
+          Play again
+        </button>
       </Show>
-      <button onClick={() => simulateGames(1000)}>Simulate Games</button>
     </main>
   )
 }
